@@ -128,6 +128,74 @@ class _QuizReviewPageState extends State<QuizReviewPage> {
                       ),
                     ),
                   
+                  const SizedBox(height: 16),
+                  
+                  // Indicador de resultado
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: acertou 
+                          ? const Color(0xFF00E640).withOpacity(0.1)
+                          : const Color(0xFFCF000F).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: acertou 
+                            ? const Color(0xFF00E640)
+                            : const Color(0xFFCF000F),
+                        width: 2,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          acertou ? Icons.check_circle : Icons.cancel,
+                          color: acertou 
+                              ? const Color(0xFF00E640)
+                              : const Color(0xFFCF000F),
+                          size: 32,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                acertou ? 'Resposta Correta!' : 'Resposta Incorreta',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: acertou 
+                                      ? const Color(0xFF00E640)
+                                      : const Color(0xFFCF000F),
+                                ),
+                              ),
+                              if (!acertou) ...[
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Sua resposta: ${respostaUsuario ?? "Não respondida"}',
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: Color(0xFF666666),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Resposta correta: $respostaCorreta',
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: Color(0xFF00E640),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
                   const SizedBox(height: 24),
                   
                   // Opções de resposta
@@ -147,28 +215,32 @@ class _QuizReviewPageState extends State<QuizReviewPage> {
                         backgroundColor = const Color(0xFF00E640).withOpacity(0.2);
                         borderColor = const Color(0xFF00E640);
                         trailingIcon = const Icon(
-                          Icons.check,
+                          Icons.check_circle,
                           color: Color(0xFF00E640),
                           size: 24,
                         );
                       } else if (isRespostaUsuario && !acertou) {
-                        // Resposta do usuário e está errada
-                        backgroundColor = const Color(0xFFCF000F).withOpacity(0.1);
+                        // Resposta do usuário e está errada (mostrar claramente)
+                        backgroundColor = const Color(0xFFCF000F).withOpacity(0.15);
                         borderColor = const Color(0xFFCF000F);
-                        trailingIcon = null;
-                      } else if (isRespostaCorreta) {
-                        // Resposta correta (quando usuário errou)
-                        backgroundColor = Colors.white;
-                        borderColor = Colors.transparent;
                         trailingIcon = const Icon(
-                          Icons.check,
+                          Icons.cancel,
+                          color: Color(0xFFCF000F),
+                          size: 24,
+                        );
+                      } else if (isRespostaCorreta && !acertou) {
+                        // Resposta correta (quando usuário errou - destacar)
+                        backgroundColor = const Color(0xFF00E640).withOpacity(0.15);
+                        borderColor = const Color(0xFF00E640);
+                        trailingIcon = const Icon(
+                          Icons.check_circle,
                           color: Color(0xFF00E640),
                           size: 24,
                         );
                       } else {
                         // Outras opções
                         backgroundColor = Colors.white;
-                        borderColor = Colors.transparent;
+                        borderColor = const Color(0xFFE0E0E0);
                         trailingIcon = null;
                       }
                       
@@ -179,27 +251,96 @@ class _QuizReviewPageState extends State<QuizReviewPage> {
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color: borderColor,
-                            width: borderColor == Colors.transparent ? 0 : 2,
+                            width: borderColor == const Color(0xFFE0E0E0) ? 1 : 2,
                           ),
-                          boxShadow: borderColor == Colors.transparent
-                              ? [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ]
-                              : [],
-                        ),
-                        child: ListTile(
-                          title: Text(
-                            opcao,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Color(0xFF212121),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
                             ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Label identificador
+                                    if (isRespostaUsuario && !acertou)
+                                      Container(
+                                        margin: const EdgeInsets.only(bottom: 8),
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFCF000F).withOpacity(0.2),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: const Text(
+                                          'SUA RESPOSTA',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFFCF000F),
+                                          ),
+                                        ),
+                                      )
+                                    else if (isRespostaCorreta && !acertou)
+                                      Container(
+                                        margin: const EdgeInsets.only(bottom: 8),
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF00E640).withOpacity(0.2),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: const Text(
+                                          'RESPOSTA CORRETA',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF00E640),
+                                          ),
+                                        ),
+                                      )
+                                    else if (isRespostaUsuario && acertou)
+                                      Container(
+                                        margin: const EdgeInsets.only(bottom: 8),
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF00E640).withOpacity(0.2),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: const Text(
+                                          'SUA RESPOSTA (CORRETA)',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF00E640),
+                                          ),
+                                        ),
+                                      ),
+                                    // Texto da opção
+                                    Text(
+                                      opcao,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: const Color(0xFF212121),
+                                        fontWeight: (isRespostaUsuario || isRespostaCorreta) 
+                                            ? FontWeight.w600 
+                                            : FontWeight.normal,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (trailingIcon != null) ...[
+                                const SizedBox(width: 12),
+                                trailingIcon,
+                              ],
+                            ],
                           ),
-                          trailing: trailingIcon,
                         ),
                       );
                     },

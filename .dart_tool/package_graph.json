@@ -14,6 +14,7 @@
         "google_fonts",
         "http",
         "image_picker",
+        "intl",
         "pay_with_paystack",
         "provider",
         "share_plus",
@@ -58,6 +59,15 @@
         "test_api",
         "vector_math",
         "vm_service"
+      ]
+    },
+    {
+      "name": "intl",
+      "version": "0.18.1",
+      "dependencies": [
+        "clock",
+        "meta",
+        "path"
       ]
     },
     {

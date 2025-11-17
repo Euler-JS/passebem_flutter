@@ -16,22 +16,22 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   final List<OnboardingItem> onboardingItems = [
     OnboardingItem(
-      title: "Bem-vindo ao\nTsevele",
-      subtitle: "Mantenha-se atualizado com as últimas notícias de Moçambique e do mundo, tudo em um só lugar.",
-      iconData: Icons.newspaper,
-      gradientColors: [const Color(0xFFC7A87B), const Color(0xFF8B5E3C)],
+      title: "Bem-vindo ao\nPasse Bem",
+      subtitle: "Prepare-se para o exame de condução com questões atualizadas, simulados e conteúdo didático completo.",
+      iconData: Icons.directions_car,
+      gradientColors: [const Color(0xFFffc107), const Color(0xFFffa000)],
     ),
     OnboardingItem(
-      title: "Notícias\nPersonalizadas",
-      subtitle: "Escolha suas categorias favoritas e receba conteúdo personalizado baseado nos seus interesses.",
-      iconData: Icons.notifications_active,
-      gradientColors: [const Color(0xFF8B5E3C), const Color(0xFFC7A87B)],
+      title: "Testes e\nSimulados",
+      subtitle: "Pratique com milhares de questões organizadas por tema e faça simulados completos para testar seus conhecimentos.",
+      iconData: Icons.quiz,
+      gradientColors: [const Color(0xFFffa000), const Color(0xFFff8f00)],
     ),
     OnboardingItem(
-      title: "Conteúdo\nPremium",
-      subtitle: "Acesse artigos exclusivos, análises aprofundadas e conteúdo premium dos melhores jornalistas.",
-      iconData: Icons.workspace_premium,
-      gradientColors: [const Color(0xFFC7A87B), const Color(0xFFBA55D3)],
+      title: "Conteúdo\nDidático",
+      subtitle: "Acesse vídeo-aulas, materiais de apoio e acompanhe seu progresso para garantir sua aprovação.",
+      iconData: Icons.school,
+      gradientColors: [const Color(0xFFff8f00), const Color(0xFFf57c00)],
     ),
   ];
 

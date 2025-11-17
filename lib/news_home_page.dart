@@ -15,6 +15,9 @@ import 'package:news_app/services/user_stats_service.dart';
 import 'package:news_app/news_detail.dart';
 import 'package:news_app/pages/profile_page.dart';
 import 'package:news_app/pages/quiz_screen.dart';
+import 'package:news_app/pages/quiz_screen_unlimited.dart';
+import 'package:news_app/widgets/advertisement_slider.dart';
+import 'package:news_app/widgets/subscription_modal.dart';
 
 // Classe helper para categorias
 class CategoryItem {
@@ -40,7 +43,6 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
   String selectedCategory = "All";
   List<Yournews> filteredNews = newsItems;
   late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
   
   // Estados da API
   List<ApiNewsModel> featuredNews = [];
@@ -103,13 +105,6 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
     _animationController.forward();
     
     // Carregar dados da API
@@ -120,6 +115,13 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
     _loadMostReadNews();
     _loadUserData();
     _loadTemas();
+    
+    // Mostrar modal de guia de estudo após carregar
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        _showStudyGuideModal();
+      }
+    });
   }
 
   @override
@@ -278,43 +280,409 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
     }
   }
   
+  // Mostrar modal de subscrição
+  void _mostrarModalSubscricao() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      isDismissible: true,
+      builder: (context) => SizedBox(
+        height: MediaQuery.of(context).size.height * 0.8,
+        child: SubscriptionModal(
+          onComprarPacote: (String pacote) {
+            Navigator.of(context).pop();
+            _comprarMoedas(pacote);
+          },
+        ),
+      ),
+    );
+  }
+
+  // Função para comprar moedas/pacote
+  Future<void> _comprarMoedas(String pacote) async {
+    final numeroController = TextEditingController();
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          'M-pesa - COMERCIANTE PMS Serviços. Cod.ref: 900215',
+          style: TextStyle(fontSize: 16),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Informe o número que será cobrado o valor para ativação do seu pacote $pacote',
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: numeroController,
+              keyboardType: TextInputType.number,
+              maxLength: 9,
+              decoration: const InputDecoration(
+                hintText: 'Ex: 84/85xxxxxxx',
+                border: OutlineInputBorder(),
+                counterText: '',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              numeroController.clear();
+              Navigator.of(context).pop();
+            },
+            child: const Text('Cancelar'),
+          ),
+          StatefulBuilder(
+            builder: (context, setState) {
+              numeroController.addListener(() {
+                setState(() {});
+              });
+              
+              final isValid = (numeroController.text.startsWith('84') || 
+                              numeroController.text.startsWith('85')) && 
+                              numeroController.text.length == 9;
+              
+              return TextButton(
+                onPressed: isValid
+                    ? () {
+                        Navigator.of(context).pop();
+                        _processarCompra(pacote, numeroController.text);
+                      }
+                    : null,
+                child: const Text('Enviar'),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Processar a compra
+  Future<void> _processarCompra(String pacote, String numero) async {
+    try {
+      // Mostrar loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Enviar para API
+      await AuthService.comprarPacote(pacote, numero);
+      
+      // Fechar loading
+      if (mounted) Navigator.of(context).pop();
+
+      // Recarregar temas para atualizar créditos
+      await _loadTemas();
+
+      // Mostrar mensagem de sucesso
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Seu pedido foi submetido. Ao COMERCIANTE PMS Serviços com código de referência 900215',
+            ),
+            duration: Duration(seconds: 5),
+            backgroundColor: Color(0xFF4CAF50),
+          ),
+        );
+      }
+    } catch (e) {
+      // Fechar loading
+      if (mounted) Navigator.of(context).pop();
+
+      // Mostrar mensagem de erro
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Passe Bem Informa'),
+            content: const Text(
+              'Sua operação foi cancelada pelo sistema do Mpesa!. Tente novamente em 10 min ou tente comprar outro pacote',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+  }
+  
+  // Mostrar modal de guia de estudo
+  void _showStudyGuideModal() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      isDismissible: true,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        decoration: const BoxDecoration(
+          color: Color(0xFFF0F4FD),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        child: Column(
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Guia de Estudo',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF607d8b),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Color(0xFF607d8b)),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            
+            // Conteúdo
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    // Teste Geral
+                    _buildStudyOptionCard(
+                      title: 'Teste Geral (Teoria Comum)',
+                      subtitle: 'Prepare-se melhor para o exame',
+                      icon: Icons.stop,
+                      progress: 0,
+                      onTap: () {
+                        Navigator.pop(context);
+                        _iniciarTesteGeral();
+                      },
+                    ),
+                    
+                    const SizedBox(height: 20),
+                    
+                    // Teste Temático
+                    _buildStudyOptionCard(
+                      title: 'Teste Temático',
+                      subtitle: 'Domine cada tema',
+                      icon: Icons.traffic,
+                      progress: 0,
+                      multipleIcons: [Icons.traffic, Icons.directions_car, Icons.stop],
+                      onTap: () {
+                        Navigator.pop(context);
+                        // Scroll para seção de temas
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  // Widget para opções do modal
+  Widget _buildStudyOptionCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required int progress,
+    List<IconData>? multipleIcons,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFFFFECB3), width: 1.2),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Ícones
+                    if (multipleIcons != null)
+                      Row(
+                        children: multipleIcons
+                            .map((ic) => Padding(
+                                  padding: const EdgeInsets.only(right: 4),
+                                  child: Icon(ic, size: 30, color: const Color(0xFF607d8b)),
+                                ))
+                            .toList(),
+                      )
+                    else
+                      Icon(icon, size: 30, color: const Color(0xFF607d8b)),
+                    
+                    const SizedBox(height: 12),
+                    
+                    // Título
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Color(0xFF212121),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 4),
+                    
+                    // Subtítulo
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: Color(0xFF757575),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Progresso circular
+              SizedBox(
+                width: 60,
+                height: 60,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      width: 60,
+                      height: 60,
+                      child: CircularProgressIndicator(
+                        value: progress / 100,
+                        strokeWidth: 4,
+                        backgroundColor: const Color(0xFFE6E7E8),
+                        valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF607d8b)),
+                      ),
+                    ),
+                    Text(
+                      '$progress%',
+                      style: const TextStyle(
+                        color: Color(0xFF607d8b),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  // Iniciar teste geral (sem limite de 25 questões)
+  void _iniciarTesteGeral() {
+    // Verificar se tem créditos
+    if (creditos == null || creditos!.atividade < 1) {
+      _mostrarDialogSemCreditos();
+      return;
+    }
+    
+    // Criar um tema "geral" para passar ao QuizScreen
+    final temaGeral = TemaModel(
+      id: 'geral',
+      nome: 'Teste Geral',
+    );
+    
+    // Navegar para tela de quiz
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => QuizScreenUnlimited(
+          tema: temaGeral,
+          tipo: 'Geral',
+        ),
+      ),
+    );
+  }
+  
+  // Mostrar diálogo sem créditos
+  void _mostrarDialogSemCreditos() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Ops!, Lamentamos.'),
+        content: const Text('Compre mais créditos para poder desfrutar dos testes'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SubscriptionPlansPage(),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFffa000),
+            ),
+            child: const Text('Comprar Passes', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   // Acessar tema para fazer teste
   void _acessarTema(TemaModel tema) {
     // Verificar se tem créditos
     if (creditos == null || creditos!.atividade < 1) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Ops!, Lamentamos.'),
-          content: const Text('Compre mais créditos para poder desfrutar dos testes'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                // Navegar para página de compra de passes
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SubscriptionPlansPage(),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFffa000),
-              ),
-              child: const Text('Comprar Passes', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
-      );
+      _mostrarDialogSemCreditos();
       return;
     }
     
-    // Navegar para tela de quiz
+    // Navegar para tela de quiz temático (25 questões, 30 min)
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -647,9 +1015,14 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
                 child: buildProgressSection(),
               ),
               
-              // Caixa de passes restantes
+              // Slider de publicidade
               SliverToBoxAdapter(
-                child: buildPassesSection(),
+                child: buildAdvertisementSlider(),
+              ),
+              
+              // Info de passes restantes (compacto)
+              SliverToBoxAdapter(
+                child: buildCompactPassesInfo(),
               ),
               
               // Grid de botões principais
@@ -759,81 +1132,113 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
     );
   }
 
-  // Seção dos passes restantes
-  Widget buildPassesSection() {
+  // Seção do slider de publicidade
+  Widget buildAdvertisementSlider() {
+    return const AdvertisementSlider();
+  }
+
+  // Info compacta de passes restantes
+  Widget buildCompactPassesInfo() {
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       padding: const EdgeInsets.all(20),
-      height: 180,
       decoration: BoxDecoration(
-        color: const Color(0xFFE6E6E6),
-        borderRadius: BorderRadius.circular(8),
+        color: const Color(0xFFF5F5F5),
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Row(
         children: [
-          const Text(
-            'Passes restantes',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w500,
+          // Ícone
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFC107),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.credit_card,
+              color: Colors.white,
+              size: 28,
             ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                '${creditos?.atividade ?? 0}',
-                style: const TextStyle(
-                  fontSize: 40,
-                  fontWeight: FontWeight.bold,
+          
+          const SizedBox(width: 16),
+          
+          // Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Passes restantes',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF666666),
+                  ),
                 ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.info_outline, size: 18),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Pacote: ${creditos?.pacote ?? "Nenhum"}\n'
-                        'Passes disponíveis: ${creditos?.atividade ?? 0}',
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Text(
+                      '${creditos?.atividade ?? 0}',
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF212121),
                       ),
-                      duration: const Duration(seconds: 3),
                     ),
-                  );
-                },
-              ),
-            ],
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.info_outline,
+                        size: 20,
+                        color: Color(0xFF999999),
+                      ),
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Pacote: ${creditos?.pacote ?? "Nenhum"}\n'
+                              'Passes disponíveis: ${creditos?.atividade ?? 0}',
+                            ),
+                            duration: const Duration(seconds: 3),
+                            backgroundColor: const Color(0xFF607d8b),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
+          
+          // Botão
           ElevatedButton(
             onPressed: () {
-              // Navigate to buy passes
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SubscriptionPlansPage(),
-                ),
-              );
+              _mostrarModalSubscricao();
+            
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFF9BA13),
+              backgroundColor: const Color(0xFFFFC107),
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
+              elevation: 0,
             ),
             child: const Text(
               'Comprar Passes',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -859,20 +1264,115 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
 
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: 1.0,
-        ),
-        itemCount: temas.length,
-        itemBuilder: (context, index) {
-          final tema = temas[index];
-          return _buildTemaCard(tema);
-        },
+      child: Column(
+        children: [
+          // Botão Teste Geral destacado
+          GestureDetector(
+            onTap: _iniciarTesteGeral,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFFffc107),
+                    Color(0xFFffa000),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFffc107).withOpacity(0.4),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.quiz,
+                      size: 32,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Teste Geral',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Questões ilimitadas • 60 minutos',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.arrow_forward_ios,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // Título para os temas
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Testes Temáticos',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF333333),
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 12),
+          
+          // Grid de temas
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              childAspectRatio: 1.0,
+            ),
+            itemCount: temas.length,
+            itemBuilder: (context, index) {
+              final tema = temas[index];
+              return _buildTemaCard(tema);
+            },
+          ),
+        ],
       ),
     );
   }

@@ -102,169 +102,91 @@ class _SplashScreenState extends State<SplashScreen> {
         height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFC7A87B),
-              Color(0xFF8B5E3C),
-              Color(0xFFC7A87B),
+              Color(0xFFffc107), // Tom mais claro de amarelo/laranja
+              Color(0xFFffa000), // Cor principal laranja do Passe Bem
+              Color(0xFFff8f00), // Tom mais escuro para criar profundidade
             ],
           ),
         ),
-        child: Stack(
-          children: [
-            // Formas geométricas de fundo
-            _buildBackgroundShapes(),
-            
-            // Conteúdo central
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Logo do app
-                  Container(
-                    width: 140,
-                    height: 140,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(35),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
+        child: SafeArea(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Animação/Logo central
+              Expanded(
+                flex: 3,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Ícone do carro
+                      Container(
+                        width: 180,
+                        height: 180,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          shape: BoxShape.circle,
                         ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.newspaper,
-                      color: Color(0xFFC7A87B),
-                      size: 70,
-                    ),
-                  ),
-
-                  const SizedBox(height: 40),
-
-                  // Nome do app
-                  const Text(
-                    'Tsevele',
-                    style: TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  Text(
-                    'Suas notícias, sempre atualizadas',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white.withOpacity(0.9),
-                    ),
-                  ),
-
-                  const SizedBox(height: 60),
-
-                  // Loading indicator
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        strokeWidth: 3,
+                        child: Center(
+                          child: Icon(
+                            Icons.directions_car,
+                            size: 100,
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                        ),
                       ),
+                      const SizedBox(height: 40),
+                      // Título "Passe Bem"
+                      const Text(
+                        'Passe Bem',
+                        style: TextStyle(
+                          fontSize: 42,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      // Subtítulo
+                      Text(
+                        'Prepare-se para o sucesso',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white.withOpacity(0.85),
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              
+              // Loading indicator na parte inferior
+              Padding(
+                padding: const EdgeInsets.only(bottom: 60),
+                child: Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsets.all(10.0),
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      strokeWidth: 3.5,
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    );
-  }
-
-  Widget _buildBackgroundShapes() {
-    return Stack(
-      children: [
-        // Círculo grande superior esquerdo
-        Positioned(
-          top: -100,
-          left: -100,
-          child: Container(
-            width: 300,
-            height: 300,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.1),
-            ),
-          ),
-        ),
-        
-        // Círculo médio superior direito
-        Positioned(
-          top: 100,
-          right: -50,
-          child: Container(
-            width: 150,
-            height: 150,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.08),
-            ),
-          ),
-        ),
-        
-        // Círculo pequeno centro esquerdo
-        Positioned(
-          top: 400,
-          left: 50,
-          child: Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.06),
-            ),
-          ),
-        ),
-        
-        // Círculo grande inferior direito
-        Positioned(
-          bottom: -150,
-          right: -100,
-          child: Container(
-            width: 400,
-            height: 400,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.05),
-            ),
-          ),
-        ),
-        
-        // Forma fluida adicional
-        Positioned(
-          bottom: 200,
-          left: -50,
-          child: Container(
-            width: 200,
-            height: 200,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(100),
-              color: Colors.white.withOpacity(0.04),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

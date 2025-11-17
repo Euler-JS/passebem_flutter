@@ -495,6 +495,51 @@ class AuthService {
     }
   }
 
+  // ===== MÉTODO DE COMPRA DE PACOTES =====
+  
+  // Comprar pacote via M-pesa
+  static Future<Map<String, dynamic>> comprarPacote(String pacote, String numero) async {
+    try {
+      final user = await getStoredUser();
+      if (user == null || user.id.isEmpty) {
+        throw Exception('User not logged in');
+      }
+      
+      final compraHeaders = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': user.id,
+      };
+      
+      final body = {
+        'pacote': pacote,
+        'numero': numero,
+      };
+      
+      print('Comprando pacote com headers: $compraHeaders');
+      print('Comprando pacote body: $body');
+      
+      final response = await http.post(
+        Uri.parse('$baseUrl/recaregarmais'),
+        headers: compraHeaders,
+        body: json.encode(body),
+      );
+      
+      print('Compra pacote response status: ${response.statusCode}');
+      print('Compra pacote response body: ${response.body}');
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final jsonData = json.decode(response.body);
+        return jsonData;
+      } else {
+        throw Exception('Failed to purchase package: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      print('Error purchasing package: $e');
+      throw Exception('Error purchasing package: $e');
+    }
+  }
+
   // ===== MÉTODOS DE MÓDULOS/AULAS =====
   
   // Buscar módulos e vídeos de aula

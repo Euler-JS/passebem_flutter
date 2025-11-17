@@ -138,6 +138,10 @@ image_picker_windows
 3.6
 file:///Users/joaomuchunja/.pub-cache/hosted/pub.dev/image_picker_windows-0.2.2/
 file:///Users/joaomuchunja/.pub-cache/hosted/pub.dev/image_picker_windows-0.2.2/lib/
+intl
+2.12
+file:///Users/joaomuchunja/.pub-cache/hosted/pub.dev/intl-0.18.1/
+file:///Users/joaomuchunja/.pub-cache/hosted/pub.dev/intl-0.18.1/lib/
 leak_tracker
 3.2
 file:///Users/joaomuchunja/.pub-cache/hosted/pub.dev/leak_tracker-10.0.9/
@@ -368,8 +372,8 @@ file:///Users/joaomuchunja/.pub-cache/hosted/pub.dev/xml-6.6.1/
 file:///Users/joaomuchunja/.pub-cache/hosted/pub.dev/xml-6.6.1/lib/
 news_app
 3.3
-file:///Users/joaomuchunja/Documents/euler/PasseBem_Mobile/passebem_flutter/
-file:///Users/joaomuchunja/Documents/euler/PasseBem_Mobile/passebem_flutter/lib/
+file:///Users/joaomuchunja/Documents/euler/passebem_flutter/
+file:///Users/joaomuchunja/Documents/euler/passebem_flutter/lib/
 sky_engine
 3.7
 file:///usr/local/Caskroom/flutter/3.24.3/flutter/bin/cache/pkg/sky_engine/
